@@ -1,13 +1,3 @@
-<?php
-$page_title = 'About Us - India PIN Code Directory';
-$page_description = 'Learn about India PIN Code Directory - your trusted source for accurate postal code information across India.';
-$breadcrumb = [
-    ['text' => 'Home', 'url' => '/'],
-    ['text' => 'About Us', 'url' => '']
-];
-include 'header.php';
-?>
-
 <div class="container" style="padding: 40px 0;">
     <div class="row">
         <div class="col-lg-9 mx-auto">
@@ -122,5 +112,3 @@ include 'header.php';
         </div>
     </div>
 </div>
-
-<?php include 'footer.php'; ?>

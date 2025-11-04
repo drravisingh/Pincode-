@@ -31,9 +31,11 @@ echo '</div>';
 // 2. Check Required Files
 echo '<div class="box">';
 echo '<h2>2. Required Files</h2>';
-$required_files = ['index.php', 'config.php', '.htaccess'];
+$project_root = dirname(__DIR__);
+$required_files = ['public/index.php', 'config/config.php', '.htaccess'];
 foreach ($required_files as $file) {
-    if (file_exists($file)) {
+    $full_path = $project_root . '/' . ltrim($file, '/');
+    if (file_exists($full_path)) {
         echo '<span class="success">✅ ' . $file . ' exists</span><br>';
     } else {
         echo '<span class="error">❌ ' . $file . ' missing!</span><br>';
@@ -44,10 +46,10 @@ echo '</div>';
 // 3. Check config.php
 echo '<div class="box">';
 echo '<h2>3. Database Connection</h2>';
-if (file_exists('config.php')) {
+if (file_exists($project_root . '/config/config.php')) {
     try {
-        require_once 'config.php';
-        echo '<span class="success">✅ config.php loaded</span><br>';
+        require_once $project_root . '/config/config.php';
+        echo '<span class="success">✅ config/config.php loaded</span><br>';
         
         // Check if constants are defined
         if (defined('DB_HOST')) {
@@ -84,10 +86,10 @@ if (file_exists('config.php')) {
         }
         
     } catch (Exception $e) {
-        echo '<span class="error">❌ Error loading config.php: ' . $e->getMessage() . '</span><br>';
+        echo '<span class="error">❌ Error loading config/config.php: ' . $e->getMessage() . '</span><br>';
     }
 } else {
-    echo '<span class="error">❌ config.php not found!</span><br>';
+    echo '<span class="error">❌ config/config.php not found!</span><br>';
 }
 echo '</div>';
 
@@ -107,11 +109,12 @@ echo '</div>';
 // 5. Check File Permissions
 echo '<div class="box">';
 echo '<h2>5. File Permissions</h2>';
-$check_perms = ['index.php', 'config.php', '.htaccess'];
+$check_perms = ['public/index.php', 'config/config.php', '.htaccess'];
 foreach ($check_perms as $file) {
-    if (file_exists($file)) {
-        $perms = substr(sprintf('%o', fileperms($file)), -4);
-        if (is_readable($file)) {
+    $full_path = $project_root . '/' . ltrim($file, '/');
+    if (file_exists($full_path)) {
+        $perms = substr(sprintf('%o', fileperms($full_path)), -4);
+        if (is_readable($full_path)) {
             echo '<span class="success">✅ ' . $file . ' (' . $perms . ') - Readable</span><br>';
         } else {
             echo '<span class="error">❌ ' . $file . ' (' . $perms . ') - Not readable</span><br>';
@@ -122,8 +125,9 @@ foreach ($check_perms as $file) {
 // Check writable directories
 $dirs = ['cache', 'sitemaps', 'uploads', 'logs'];
 foreach ($dirs as $dir) {
-    if (is_dir($dir)) {
-        if (is_writable($dir)) {
+    $dir_path = $project_root . '/' . $dir;
+    if (is_dir($dir_path)) {
+        if (is_writable($dir_path)) {
             echo '<span class="success">✅ /' . $dir . ' - Writable</span><br>';
         } else {
             echo '<span class="warning">⚠️ /' . $dir . ' - Not writable</span><br>';
@@ -206,10 +210,10 @@ echo '<div class="box">';
 echo '<h2>10. Quick Fixes</h2>';
 echo '<ol>';
 echo '<li><strong>If index.php is missing:</strong> Upload your website files</li>';
-echo '<li><strong>If config.php has errors:</strong> Check database credentials</li>';
+echo '<li><strong>If config/config.php has errors:</strong> Check database credentials</li>';
 echo '<li><strong>If .htaccess causes issues:</strong> Temporarily rename it to .htaccess.bak and test</li>';
 echo '<li><strong>If permissions are wrong:</strong> Set files to 644 and folders to 755</li>';
-echo '<li><strong>If database connection fails:</strong> Verify credentials in config.php</li>';
+echo '<li><strong>If database connection fails:</strong> Verify credentials in config/config.php</li>';
 echo '</ol>';
 echo '</div>';
 
