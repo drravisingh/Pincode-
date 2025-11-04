@@ -1,45 +1,3 @@
-<?php
-$page_title = 'Contact Us - India PIN Code Directory';
-$page_description = 'Get in touch with us for any queries, suggestions, or feedback about our PIN code directory service.';
-$breadcrumb = [
-    ['text' => 'Home', 'url' => '/'],
-    ['text' => 'Contact Us', 'url' => '']
-];
-
-// Handle form submission
-$message_sent = false;
-$error_message = '';
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_contact'])) {
-    $name = htmlspecialchars(trim($_POST['name']));
-    $email = htmlspecialchars(trim($_POST['email']));
-    $subject = htmlspecialchars(trim($_POST['subject']));
-    $message = htmlspecialchars(trim($_POST['message']));
-    
-    // Basic validation
-    if (empty($name) || empty($email) || empty($subject) || empty($message)) {
-        $error_message = 'All fields are required.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error_message = 'Invalid email address.';
-    } else {
-        // Here you would typically send email or save to database
-        // For now, we'll just set a success message
-        $message_sent = true;
-        
-        // Optional: Send email (uncomment and configure)
-        /*
-        $to = 'info@yoursite.com';
-        $email_subject = "Contact Form: $subject";
-        $email_body = "Name: $name\nEmail: $email\n\nMessage:\n$message";
-        $headers = "From: $email\r\nReply-To: $email";
-        mail($to, $email_subject, $email_body, $headers);
-        */
-    }
-}
-
-include 'header.php';
-?>
-
 <div class="container" style="padding: 40px 0;">
     <div class="row">
         <div class="col-lg-9 mx-auto">
@@ -62,7 +20,7 @@ include 'header.php';
                         
                         <?php if ($error_message): ?>
                             <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
-                                <strong>❌ Error!</strong> <?php echo $error_message; ?>
+                                <strong>❌ Error!</strong> <?php echo htmlspecialchars($error_message, ENT_QUOTES); ?>
                             </div>
                         <?php endif; ?>
                         
@@ -189,5 +147,3 @@ include 'header.php';
         </div>
     </div>
 </div>
-
-<?php include 'footer.php'; ?>

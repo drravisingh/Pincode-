@@ -1,13 +1,3 @@
-<?php
-$page_title = 'Privacy Policy - India PIN Code Directory';
-$page_description = 'Privacy Policy for India PIN Code Directory. Learn how we collect, use, and protect your personal information.';
-$breadcrumb = [
-    ['text' => 'Home', 'url' => '/'],
-    ['text' => 'Privacy Policy', 'url' => '']
-];
-include 'header.php';
-?>
-
 <div class="container" style="padding: 40px 0;">
     <div class="row">
         <div class="col-lg-9 mx-auto">
@@ -148,5 +138,3 @@ include 'header.php';
         </div>
     </div>
 </div>
-
-<?php include 'footer.php'; ?>
