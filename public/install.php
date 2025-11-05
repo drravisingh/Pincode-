@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 $configPath = dirname(__DIR__) . '/config/config.php';
 $schemaPath = dirname(__DIR__) . '/database/schema.sql';
+$schemaFallbackPath = __DIR__ . '/install/schema.php';
 
 $currentConfig = file_exists($configPath) ? file_get_contents($configPath) : '';
 $hasPlaceholder = $currentConfig && strpos($currentConfig, 'change_me') !== false;
@@ -54,9 +55,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors) && $pdo instanceof PDO) {
-        $schema = file_get_contents($schemaPath);
-        if ($schema === false) {
-            $errors[] = 'Unable to read database/schema.sql.';
+        $schema = false;
+        if (is_readable($schemaPath)) {
+            $schema = file_get_contents($schemaPath);
+        }
+
+        if ($schema === false && is_readable($schemaFallbackPath)) {
+            $schema = require $schemaFallbackPath;
+        }
+
+        if (!is_string($schema) || $schema === '') {
+            $errors[] = 'Unable to read the database schema file. Ensure database/schema.sql or public/install/schema.php is readable.';
         } else {
             $schema = preg_replace('/^\s*--.*$/m', '', $schema);
             $schema = preg_replace('/\/\*.*?\*\//s', '', $schema);
