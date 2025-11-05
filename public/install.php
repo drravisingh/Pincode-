@@ -4,7 +4,6 @@ declare(strict_types=1);
 $configPath = dirname(__DIR__) . '/config/config.php';
 $schemaPath = dirname(__DIR__) . '/database/schema.sql';
 $schemaFallbackPath = __DIR__ . '/install/schema.php';
-$configFallbackPath = __DIR__ . '/install/runtime-config.php';
 
 $currentConfig = file_exists($configPath) ? file_get_contents($configPath) : '';
 $hasPlaceholder = $currentConfig && strpos($currentConfig, 'change_me') !== false;
@@ -62,8 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $schema = file_get_contents($schemaPath);
         }
 
-        if ((!is_string($schema) || $schema === '') && is_readable($schemaFallbackPath)) {
-            $schema = @include $schemaFallbackPath;
+
         }
 
         if (!is_string($schema) || $schema === '') {
