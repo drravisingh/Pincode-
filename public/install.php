@@ -4,8 +4,7 @@ declare(strict_types=1);
 $configPath = dirname(__DIR__) . '/config/config.php';
 $schemaPath = dirname(__DIR__) . '/database/schema.sql';
 $schemaFallbackPath = __DIR__ . '/install/schema.php';
- codex/fix-installation-error-with-schema.sql-x99rn9
-$configFallbackPath = __DIR__ . '/install/runtime-config.php' main
+$configFallbackPath = __DIR__ . '/install/runtime-config.php';
 
 $currentConfig = is_readable($configPath) ? (string) file_get_contents($configPath) : '';
 $fallbackConfig = is_readable($configFallbackPath) ? (string) file_get_contents($configFallbackPath) : '';
@@ -81,9 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $schema = file_get_contents($schemaPath);
         }
 
-codex/fix-installation-error-with-schema.sql-x99rn9
         if ((!is_string($schema) || $schema === '') && is_readable($schemaFallbackPath)) {
-            $schema = @include $schemaFallbackPa
+            $schema = @include $schemaFallbackPath;
 
         }
 
