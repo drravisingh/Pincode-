@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 $configPath = dirname(__DIR__) . '/config/config.php';
 $schemaPath = dirname(__DIR__) . '/database/schema.sql';
+$schemaFallbackPath = __DIR__ . '/install/schema.php';
+$configFallbackPath = __DIR__ . '/install/runtime-config.php';
 
 $currentConfig = file_exists($configPath) ? file_get_contents($configPath) : '';
 $hasPlaceholder = $currentConfig && strpos($currentConfig, 'change_me') !== false;
@@ -54,9 +56,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors) && $pdo instanceof PDO) {
-        $schema = file_get_contents($schemaPath);
-        if ($schema === false) {
-            $errors[] = 'Unable to read database/schema.sql.';
+        $schema = false;
+        if (is_readable($schemaPath)) {
+            $schema = file_get_contents($schemaPath);
+        }
+
+        if ((!is_string($schema) || $schema === '') && is_readable($schemaFallbackPath)) {
+            $schema = @include $schemaFallbackPath;
+        }
+
+        if (!is_string($schema) || $schema === '') {
+            $errors[] = 'Unable to read the database schema file. Ensure database/schema.sql or public/install/schema.php is readable.';
         } else {
             $schema = preg_replace('/^\s*--.*$/m', '', $schema);
             $schema = preg_replace('/\/\*.*?\*\//s', '', $schema);
@@ -113,9 +123,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$key, $value]);
         }
 
-        $configTemplate = <<<PHP
+        $configTemplate = <<<'PHP'
 <?php
 declare(strict_types=1);
+
+if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
+    http_response_code(404);
+    exit;
+}
 
 if (!defined('DB_HOST')) {
     define('DB_HOST', '%s');
@@ -177,9 +192,19 @@ PHP;
             addslashes($siteName)
         );
 
-        if (file_put_contents($configPath, $configContents) === false) {
+        $configWriteOk = file_put_contents($configPath, $configContents) !== false;
+
+        if (!$configWriteOk && (!is_readable($configPath) || trim((string) @file_get_contents($configPath)) === '')) {
             $errors[] = 'Unable to write configuration file. Check filesystem permissions.';
         } else {
+            if ($configWriteOk) {
+                @chmod($configPath, 0660);
+            }
+
+            if (@file_put_contents($configFallbackPath, $configContents) !== false) {
+                @chmod($configFallbackPath, 0660);
+            }
+
             $success = true;
         }
     }
