@@ -20,6 +20,7 @@ if ($isLocked) {
 }
 
 $errors = [];
+$warnings = [];
 $success = false;
 $pdo = null;
 
@@ -192,17 +193,22 @@ PHP;
             addslashes($siteName)
         );
 
-        $configWriteOk = file_put_contents($configPath, $configContents) !== false;
+        $configWriteOk = @file_put_contents($configPath, $configContents) !== false;
+        $fallbackWriteOk = @file_put_contents($configFallbackPath, $configContents) !== false;
 
-        if (!$configWriteOk && (!is_readable($configPath) || trim((string) @file_get_contents($configPath)) === '')) {
+        if ($configWriteOk) {
+            @chmod($configPath, 0660);
+        }
+
+        if ($fallbackWriteOk) {
+            @chmod($configFallbackPath, 0660);
+        }
+
+        if (!$configWriteOk && !$fallbackWriteOk && (!is_readable($configPath) || trim((string) @file_get_contents($configPath)) === '')) {
             $errors[] = 'Unable to write configuration file. Check filesystem permissions.';
         } else {
-            if ($configWriteOk) {
-                @chmod($configPath, 0660);
-            }
-
-            if (@file_put_contents($configFallbackPath, $configContents) !== false) {
-                @chmod($configFallbackPath, 0660);
+            if (!$configWriteOk && $fallbackWriteOk) {
+                $warnings[] = 'The installer could not write to config/config.php. The application will use the runtime copy in public/install/runtime-config.php. Grant write access to config/config.php to make this permanent.';
             }
 
             $success = true;
@@ -255,6 +261,17 @@ PHP;
         <?php elseif ($success): ?>
             <div class="alert alert-success">
                 <strong>Success!</strong> Configuration saved and database initialised. You can now <a href="/admin">log in to the admin panel</a>.
+            </div>
+        <?php endif; ?>
+
+        <?php if ($warnings): ?>
+            <div class="alert" style="background:#fef3c7;color:#92400e;">
+                <strong>Warning:</strong>
+                <ul>
+                    <?php foreach ($warnings as $warning): ?>
+                        <li><?php echo htmlspecialchars($warning); ?></li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
         <?php endif; ?>
 
