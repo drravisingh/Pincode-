@@ -4,15 +4,35 @@ declare(strict_types=1);
 $configPath = dirname(__DIR__) . '/config/config.php';
 $schemaPath = dirname(__DIR__) . '/database/schema.sql';
 $schemaFallbackPath = __DIR__ . '/install/schema.php';
+ codex/fix-installation-error-with-schema.sql-x99rn9
+$configFallbackPath = __DIR__ . '/install/runtime-config.php' main
 
-$currentConfig = file_exists($configPath) ? file_get_contents($configPath) : '';
-$hasPlaceholder = $currentConfig && strpos($currentConfig, 'change_me') !== false;
-$isLocked = file_exists($configPath) && !$hasPlaceholder && !isset($_GET['force']);
+$currentConfig = is_readable($configPath) ? (string) file_get_contents($configPath) : '';
+$fallbackConfig = is_readable($configFallbackPath) ? (string) file_get_contents($configFallbackPath) : '';
+$hasPlaceholder = $currentConfig !== '' && strpos($currentConfig, 'change_me') !== false;
+$isLocked = false;
+$lockSource = '';
+
+if (!isset($_GET['force'])) {
+    if (trim($currentConfig) !== '' && !$hasPlaceholder) {
+        $isLocked = true;
+        $lockSource = 'config/config.php';
+    } elseif (trim($fallbackConfig) !== '') {
+        $isLocked = true;
+        $lockSource = 'public/install/runtime-config.php';
+    }
+}
 
 if ($isLocked) {
     echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Already installed</title><style>body{font-family:Arial,sans-serif;background:#f5f6ff;color:#333;padding:40px;}a{color:#4f46e5;text-decoration:none;}a.button{display:inline-block;padding:10px 18px;border-radius:6px;background:#4f46e5;color:#fff;margin-top:20px;}</style></head><body>';
     echo '<h1>Application already installed</h1>';
-    echo '<p>The configuration file already contains custom values. If you need to re-run the installer, append <code>?force=1</code> to this URL.</p>';
+    $lockMessage = $lockSource !== ''
+        ? sprintf(
+            'The configuration is already set in <code>%s</code>.',
+            htmlspecialchars($lockSource, ENT_QUOTES, 'UTF-8')
+        )
+        : 'The configuration file already contains custom values.';
+    echo '<p>' . $lockMessage . ' If you need to re-run the installer, append <code>?force=1</code> to this URL.</p>';
     echo '<p><a class="button" href="/admin">Go to admin panel</a></p>';
     echo '</body></html>';
     return;
@@ -61,6 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $schema = file_get_contents($schemaPath);
         }
 
+codex/fix-installation-error-with-schema.sql-x99rn9
+        if ((!is_string($schema) || $schema === '') && is_readable($schemaFallbackPath)) {
+            $schema = @include $schemaFallbackPa
 
         }
 
