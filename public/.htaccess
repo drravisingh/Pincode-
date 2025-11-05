@@ -1,5 +1,5 @@
-Options -Indexes
-
+# Some shared hosts disable the Options directive, which would result in a 500 error.
+# We avoid using it here and rely on the rewrite rules below to handle requests safely.
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /

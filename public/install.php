@@ -19,6 +19,7 @@ if ($isLocked) {
 }
 
 $errors = [];
+$warnings = [];
 $success = false;
 $pdo = null;
 
@@ -60,8 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $schema = file_get_contents($schemaPath);
         }
 
-        if ($schema === false && is_readable($schemaFallbackPath)) {
-            $schema = require $schemaFallbackPath;
+
         }
 
         if (!is_string($schema) || $schema === '') {
@@ -122,9 +122,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$key, $value]);
         }
 
-        $configTemplate = <<<PHP
+        $configTemplate = <<<'PHP'
 <?php
 declare(strict_types=1);
+
+if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) {
+    http_response_code(404);
+    exit;
+}
 
 if (!defined('DB_HOST')) {
     define('DB_HOST', '%s');
@@ -186,9 +191,24 @@ PHP;
             addslashes($siteName)
         );
 
-        if (file_put_contents($configPath, $configContents) === false) {
+        $configWriteOk = @file_put_contents($configPath, $configContents) !== false;
+        $fallbackWriteOk = @file_put_contents($configFallbackPath, $configContents) !== false;
+
+        if ($configWriteOk) {
+            @chmod($configPath, 0660);
+        }
+
+        if ($fallbackWriteOk) {
+            @chmod($configFallbackPath, 0660);
+        }
+
+        if (!$configWriteOk && !$fallbackWriteOk && (!is_readable($configPath) || trim((string) @file_get_contents($configPath)) === '')) {
             $errors[] = 'Unable to write configuration file. Check filesystem permissions.';
         } else {
+            if (!$configWriteOk && $fallbackWriteOk) {
+                $warnings[] = 'The installer could not write to config/config.php. The application will use the runtime copy in public/install/runtime-config.php. Grant write access to config/config.php to make this permanent.';
+            }
+
             $success = true;
         }
     }
@@ -239,6 +259,17 @@ PHP;
         <?php elseif ($success): ?>
             <div class="alert alert-success">
                 <strong>Success!</strong> Configuration saved and database initialised. You can now <a href="/admin">log in to the admin panel</a>.
+            </div>
+        <?php endif; ?>
+
+        <?php if ($warnings): ?>
+            <div class="alert" style="background:#fef3c7;color:#92400e;">
+                <strong>Warning:</strong>
+                <ul>
+                    <?php foreach ($warnings as $warning): ?>
+                        <li><?php echo htmlspecialchars($warning); ?></li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
         <?php endif; ?>
 
